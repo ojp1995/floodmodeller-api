@@ -7,11 +7,12 @@ import pyproj, fiona
 
 pathlib.Path.cwd()
 sys.path.append(r"C:\Users\phillio\Github\Open_source\floodmodeller-api")
+# sys.path.append(r'C:\Users\phillio\Anaconda3\envs\FM_API\Library\share\proj')
 
-from floodmodeller_api import XML2D
+# from floodmodeller_api import XML2D
 
 # open blank 2d xml file
-xml = XML2D(r"C:\Users\phillio\Github\xml_2d_test_data\Bootle\2d_simulation_blank.xml")
+# xml = XML2D(r"C:\Users\phillio\Github\xml_2d_test_data\Bootle\2d_simulation_blank.xml")
 
 ### old method, not needed anymore
 #importing the TUFLOW data as a text file
@@ -91,8 +92,14 @@ except Exception as e:
 
 df_BOOT_L_015.info()
 
-df_BOOT_L_015.describe()
+print(df_BOOT_L_015['Comment'])
+print(df_BOOT_L_015['geometry'])
+print(df_BOOT_L_015.geom_type)
 
+df_BOOT_L_015['geometry'] = df_BOOT_L_015.geometry
+df_BOOT_L_015['geometry']
 
+df_BOOT_L_015.geometry.plot()
+# df_BOOT_L_015['geometry'].linestring()
 
 
