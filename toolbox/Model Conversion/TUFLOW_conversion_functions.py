@@ -8,6 +8,7 @@ import sys, mmap, glob, os
 import geopandas as gpd
 import pyproj, fiona
 import copy
+import shutil  # for copying files to new file paths
 
 sys.path.append(r"C:\Users\phillio\Github\Open_source\floodmodeller-api")
 
@@ -64,7 +65,7 @@ def convert_tgc_to_list(tgc_filepath):
     return tgc_data
 
 
-def find_active_area_from_tgc_file(tgc_data, tgc_filepath):
+def find_active_area_from_tgc_file(tgc_data, tgc_filepath, FM_folder_path):
     ''' 
     In this function we will be isolating information for the tgc file for constructing
     the computational area for Flood Modeller
@@ -106,14 +107,21 @@ def find_active_area_from_tgc_file(tgc_data, tgc_filepath):
     # extension straight on!
 
     # finding the path/parent path of the tgc file (not sure of we need parent or regular path yet)
-    p = pathlib.Path('tgc_filepath')
+    p = pathlib.Path(tgc_filepath)
     parent_path = p.parents[0]
 
     # active area path
-    active_area_path = pathlib.Path.joinpath(parent_path, active_area_rel_path)
+    active_area_path_TF = pathlib.Path.joinpath(parent_path, active_area_rel_path)
+    active_area_file_name = active_area_path_TF.name
+    # copying files to relevant paths
+    shutil.copy(active_area_path_TF, FM_folder_path)
+
+    active_area_path_FM = pathlib.Path.joinpath(FM_folder_path, active_area_file_name)
+
     
     # orientation line path construction and using the orientation line to access info for active area
     orientation_line_file = pathlib.Path.joinpath(parent_path, orientation_line_path)  # holding line for the minute
+    # shutil.copy(orientation_line_file, FM_folder_path)  # I don't think is needed 
     orientation_line_file.open('a')
     df_orientation_line = gpd.read_file(orientation_line_file)
 
@@ -132,7 +140,7 @@ def find_active_area_from_tgc_file(tgc_data, tgc_filepath):
     ncols = n_X/dx
     nrows = n_Y/dx 
     
-    return xll, yll, nrows, ncols, active_area_path, rotation
+    return xll, yll, nrows, ncols, active_area_path_FM, rotation
 
 
 def find_orientation_line_angle(x1, y1, x2, y2):
