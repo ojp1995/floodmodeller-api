@@ -74,9 +74,10 @@ def find_active_area_from_tgc_file(tgc_data, tgc_filepath, FM_folder_path):
         tgc_data - list of data
         tgc_filepath - path to tgc data
 
-    Outputs
+    Outputs 
         xll
         yll
+        dx - spacial step
         nrows
         ncols
         active_area
@@ -140,7 +141,7 @@ def find_active_area_from_tgc_file(tgc_data, tgc_filepath, FM_folder_path):
     ncols = n_X/dx
     nrows = n_Y/dx 
     
-    return xll, yll, nrows, ncols, active_area_path_FM, rotation
+    return xll, yll, dx, nrows, ncols, active_area_path_FM, rotation
 
 
 def find_orientation_line_angle(x1, y1, x2, y2):
@@ -202,3 +203,49 @@ def find_orientation_line_angle(x1, y1, x2, y2):
             theta_int = math.degrees( math.atan(dy/dx) )
             theta = 270 + theta_int
             return theta
+
+    
+def load_active_area_to_xml(xml2d, xll, yll, dx, nrows, ncols, active_area_path, rotation, FM_folder_name, domain_name):
+    '''
+    Here we will be adding the information needed for the computational area for 
+    Flood Modeller xml2d solver
+
+    Inputs:
+        xml2d - xml file without the computational area information
+        (xll, yll) - lower left coordinates
+        nrows, ncols - number of grid points for discretisation of active area
+        active area_path - path to a .shp file to be loaded directly into xml file
+        rotation - angle rotated of grid from horizontal at xll, yll anti-clockwise
+        FM_folder_path - path where the new information is saved, xml should be in folder above this
+        domain_name - the domain we are wanting to add here
+
+    Outputs:
+        xml2d - updated with computational area
+
+    Assumptions:
+        1. Empty (ish) xml2d file as input, or rather no computational area 
+
+        2. Angle is measured from the lower left coordinate from the horizontal in the anti-cloclwise direction
+
+        3. xml2d is at the same level as the folder, FM_folder.
+
+        4. active_area_path is an absolute path.
+    '''
+
+    # rel_parent_path = pathlib.Path(active_area_path).parents[0]
+    active_area_file = pathlib.Path(active_area_path).name
+    active_area_path_FM = pathlib.Path.joinpath(FM_folder_name, active_area_file)
+
+    xml2d.domains[domain_name]["computational_area"]["xll"] = xll
+    xml2d.domains[domain_name]["computational_area"]["yll"] = yll
+    xml2d.domains[domain_name]["computational_area"]["dx"] = dx
+    xml2d.domains[domain_name]["computational_area"]["nrows"] = nrows
+    xml2d.domains[domain_name]["computational_area"]["ncols"] = ncols
+    xml2d.domains[domain_name]["computational_area"]["active_area"] = active_area_path_FM
+    xml2d.domains[domain_name]["computational_area"]["rotation"] = rotation
+
+    xml2d.write()  # this should check that everything has been added and order it correctly.
+
+    return xml2d
+
+
