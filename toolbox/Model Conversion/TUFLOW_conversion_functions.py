@@ -64,13 +64,14 @@ def convert_tgc_to_list(tgc_filepath):
     return tgc_data
 
 
-def place_holder_name(tgc_data):
+def place_holder_name(tgc_data, tgc_filepath):
     ''' 
     In this function we will be isolating information for the tgc file for constructing
     the computational area for Flood Modeller
 
     Inputs:
         tgc_data - list of data
+        tgc_filepath - path to tgc data
 
     Outputs
         xll
@@ -100,6 +101,16 @@ def place_holder_name(tgc_data):
             orientation_line_path = tgc_data[line][1]
 
     
+    # Here we have the relative path and file name of the active area and orientation line. We now want to copy these files
+    # into our new repository. IDEALLY using realtive paths but could potentilly find the parent path and then append the 
+    # extension straight on!
+
+    # finding the path/parent path of the tgc file (not sure of we need parent or regular path yet)
+    p = pathlib.Path('tgc_filepath')
+    parent_path = p.parents[0]
+    
+
+
     orientation_line_file = 1  # holding line for the minute
     orientation_line_file.open('a')
     df_orientation_line = gpd.read_file(orientation_line_file)
