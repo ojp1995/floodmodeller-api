@@ -26,7 +26,7 @@ FM_folder_name = FM_folder_path.name
 domain_name = "Domain 1"
 
 # loading empty(ish) xml2d file
-empty_xml = r"C:\Users\phillio\OneDrive - Jacobs\Documents\TUFLOW_examples\Bootle_FM\Bootle_2D_data\xml2d_bootle_test.xml"
+empty_xml = r"C:\Users\phillio\OneDrive - Jacobs\Documents\TUFLOW_examples\Bootle_FM\xml2d_bootle_test.xml"
 xml2d = XML2D(empty_xml)
 
 TUFLOW_data = convert_tgc_to_list(tgc_filepath)
