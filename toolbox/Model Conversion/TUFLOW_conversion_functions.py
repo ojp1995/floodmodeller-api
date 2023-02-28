@@ -64,7 +64,7 @@ def convert_tgc_to_list(tgc_filepath):
     return tgc_data
 
 
-def place_holder_name(tgc_data, tgc_filepath):
+def find_active_area_from_tgc_file(tgc_data, tgc_filepath):
     ''' 
     In this function we will be isolating information for the tgc file for constructing
     the computational area for Flood Modeller
@@ -95,7 +95,7 @@ def place_holder_name(tgc_data, tgc_filepath):
             n_Y = float(line_partition[2])
         
         if tgc_data[line][0] == 'Read GIS Code':
-            active_area_path = tgc_data[line][1]
+            active_area_rel_path = tgc_data[line][1]
 
         if tgc_data[line][0] == 'Read GIS Location':
             orientation_line_path = tgc_data[line][1]
@@ -108,10 +108,12 @@ def place_holder_name(tgc_data, tgc_filepath):
     # finding the path/parent path of the tgc file (not sure of we need parent or regular path yet)
     p = pathlib.Path('tgc_filepath')
     parent_path = p.parents[0]
+
+    # active area path
+    active_area_path = pathlib.Path.joinpath(parent_path, active_area_rel_path)
     
-
-
-    orientation_line_file = 1  # holding line for the minute
+    # orientation line path construction and using the orientation line to access info for active area
+    orientation_line_file = pathlib.Path.joinpath(parent_path, orientation_line_path)  # holding line for the minute
     orientation_line_file.open('a')
     df_orientation_line = gpd.read_file(orientation_line_file)
 
@@ -130,7 +132,7 @@ def place_holder_name(tgc_data, tgc_filepath):
     ncols = n_X/dx
     nrows = n_Y/dx 
     
-    return xll, yll, nrows, ncols, rotation
+    return xll, yll, nrows, ncols, active_area_path, rotation
 
 
 def find_orientation_line_angle(x1, y1, x2, y2):
