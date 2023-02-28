@@ -9,6 +9,7 @@ import geopandas as gpd
 import pyproj, fiona
 import copy
 import shutil  # for copying files to new file paths
+import math
 
 sys.path.append(r"C:\Users\phillio\Github\Open_source\floodmodeller-api")
 
@@ -233,8 +234,9 @@ def load_active_area_to_xml(xml2d, xll, yll, dx, nrows, ncols, active_area_path,
     '''
 
     # rel_parent_path = pathlib.Path(active_area_path).parents[0]
+
     active_area_file = pathlib.Path(active_area_path).name
-    active_area_path_FM = pathlib.Path.joinpath(FM_folder_name, active_area_file)
+    active_area_path_FM = pathlib.Path.joinpath(pathlib.Path(FM_folder_name), active_area_file)
 
     xml2d.domains[domain_name]["computational_area"]["xll"] = xll
     xml2d.domains[domain_name]["computational_area"]["yll"] = yll
@@ -244,8 +246,9 @@ def load_active_area_to_xml(xml2d, xll, yll, dx, nrows, ncols, active_area_path,
     xml2d.domains[domain_name]["computational_area"]["active_area"] = active_area_path_FM
     xml2d.domains[domain_name]["computational_area"]["rotation"] = rotation
 
-    xml2d.write()  # this should check that everything has been added and order it correctly.
-
+    # TODO: This is the part that is broken, it doens't like saving to this file apparently.
+    xml2d._write()  # this should check that everything has been added and order it correctly.
+    
     return xml2d
 
 
