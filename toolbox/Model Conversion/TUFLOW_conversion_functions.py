@@ -128,9 +128,9 @@ def find_active_area_from_tgc_file(tgc_data, tgc_filepath, FM_folder_path):
 
     
     #isolating xll, yll
-    orientation_line = df_orientation_line.gemoetry[0]
-    x1, y1 = orientation_line[0]
-    x2, y2 = orientation_line[1]
+    orientation_line = df_orientation_line.geometry[0]
+    x1, y1 = orientation_line.coords[0]
+    x2, y2 = orientation_line.coords[1]
     
     xll, yll = x1, y1
 
