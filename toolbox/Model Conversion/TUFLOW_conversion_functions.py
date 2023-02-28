@@ -83,16 +83,43 @@ def place_holder_name(tgc_data):
     Assumptions:
         1.
     '''
-    # finding the path for the loc line
-    loc_line = 1 # holding for time being
-    # now need to open the file
-    loc_line.open('a')
-    df_loc_line = gpd.read_file(loc_line)
+        # now we need to find the nrows, ncols, and active area path
+    for line in range(len(tgc_data)):
+        if tgc_data[line][0] == 'Cell Size':
+            dx = float(tgc_data[line][1])
+        
+        if tgc_data[line][0] == 'Grid Size (X,Y)':
+            line_partition = tgc_data[line][1].partition(',')
+            n_X = float(line_partition[0])
+            n_Y = float(line_partition[2])
+        
+        if tgc_data[line][0] == 'Read GIS Code':
+            active_area_path = tgc_data[line][1]
 
+        if tgc_data[line][0] == 'Read GIS Location':
+            orientation_line_path = tgc_data[line][1]
+
+    
+    orientation_line_file = 1  # holding line for the minute
+    orientation_line_file.open('a')
+    df_orientation_line = gpd.read_file(orientation_line_file)
+
+    
     #isolating xll, yll
-    orientation_line = df_loc_line.gemoetry[0]
+    orientation_line = df_orientation_line.gemoetry[0]
     x1, y1 = orientation_line[0]
     x2, y2 = orientation_line[1]
+    
+    xll, yll = x1, y1
+
+    # computing the rotation
+    rotation = find_orientation_line_angle(x1, y1, x2, y2)
+
+
+    ncols = n_X/dx
+    nrows = n_Y/dx 
+    
+    return xll, yll, nrows, ncols, rotation
 
 
 def find_orientation_line_angle(x1, y1, x2, y2):
@@ -112,20 +139,20 @@ def find_orientation_line_angle(x1, y1, x2, y2):
         1. angle is measured anti clockwise from horizontal, centre of rotation (x1, y1).
     '''
     if y2 > y1: # restriction to the upper half plane
-    dy = y2 - y1
+        dy = y2 - y1
 
-    if x2 > x1:  #first qudarant \theta \in (0, 90)
-        dx = x2 - x1
-        theta = math.degrees( math.atan(dy/dx) )
-        return theta
-    elif x2 == x1: # y = x line
-        theta = 90
-        return theta
-    elif x2 < x1: #second quadrant\theta \in (90, 180)
-        dx = x1 - x2
-        theta_int = math.degrees( math.atan(dx/dy) )
-        theta = 90 + theta_int
-        return theta
+        if x2 > x1:  #first qudarant \theta \in (0, 90)
+            dx = x2 - x1
+            theta = math.degrees( math.atan(dy/dx) )
+            return theta
+        elif x2 == x1: # y = x line
+            theta = 90
+            return theta
+        elif x2 < x1: #second quadrant\theta \in (90, 180)
+            dx = x1 - x2
+            theta_int = math.degrees( math.atan(dx/dy) )
+            theta = 90 + theta_int
+            return theta
 
     elif y2 == y1: # here we are already on the x axis, just depends on which side of the y=x line we are.
 
