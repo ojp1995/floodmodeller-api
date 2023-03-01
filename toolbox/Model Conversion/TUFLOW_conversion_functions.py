@@ -139,8 +139,8 @@ def find_active_area_from_tgc_file(tgc_data, tgc_filepath, FM_folder_path):
     rotation = find_orientation_line_angle(x1, y1, x2, y2)
 
 
-    ncols = n_X/dx
-    nrows = n_Y/dx 
+    ncols = int(n_X/dx)
+    nrows = int(n_Y/dx) 
     
     return xll, yll, dx, nrows, ncols, active_area_path_FM, rotation
 
@@ -246,12 +246,15 @@ def load_active_area_to_xml(xml2d, xll, yll, dx, nrows, ncols, active_area_path,
     xml2d.domains[domain_name]["computational_area"]["active_area"] = active_area_path_FM
     xml2d.domains[domain_name]["computational_area"]["rotation"] = rotation
 
+    xml2d.domains[domain_name]["topography"] = "holding.asc"
+
     # TODO: This is the part that is broken, it doens't like saving to this file apparently.
     # xml2d.update()  # this should check that everything has been added and order it correctly.
     # xml2d.save()
     # xml2d._recursive_reorder_xml()
-    xml2d._validate()
-    # xml2d.save
+    # xml2d._write()
+    # xml2d._validate()
+    xml2d.save(r"C:\Users\phillio\OneDrive - Jacobs\Documents\TUFLOW_examples\Bootle_FM\Bootle_test.xml")
     return xml2d
 
 
