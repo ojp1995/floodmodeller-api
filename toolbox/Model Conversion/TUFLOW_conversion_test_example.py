@@ -34,4 +34,6 @@ xll, yll, dx, nrows, ncols, active_area_path_FM, rotation = find_active_area_fro
 
 xml2d = load_active_area_to_xml( xml2d, xll, yll, dx, nrows, ncols, active_area_path_FM, rotation, FM_folder_name, domain_name)
 
+# xml2d = find_and_load_asc_to_xml(xml2d, TUFLOW_data, tgc_filepath, FM_folder_path)
+
 
