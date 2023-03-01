@@ -115,8 +115,14 @@ def find_active_area_from_tgc_file(tgc_data, tgc_filepath, FM_folder_path):
     # active area path
     active_area_path_TF = pathlib.Path.joinpath(parent_path, active_area_rel_path)
     active_area_file_name = active_area_path_TF.name
-    # copying files to relevant paths
-    shutil.copy(active_area_path_TF, FM_folder_path)
+
+    # read the file using geopandas
+    df_active_area = gpd.read_file(active_area_path_TF)
+    # move the file to the new location
+    df_active_area.to_file(pathlib.Path(FM_folder_path, active_area_path_TF.name))
+
+    # # copying files to relevant paths
+    # shutil.copy(active_area_path_TF, FM_folder_path)
 
     active_area_path_FM = pathlib.Path.joinpath(FM_folder_path, active_area_file_name)
 
@@ -257,4 +263,24 @@ def load_active_area_to_xml(xml2d, xll, yll, dx, nrows, ncols, active_area_path,
     xml2d.save(r"C:\Users\phillio\OneDrive - Jacobs\Documents\TUFLOW_examples\Bootle_FM\Bootle_test.xml")
     return xml2d
 
+def find_and_load_asc_to_xml(xml2d, tgc_data, tgc_filepath, FM_folder_path, domain_name):
+    '''
+    In this function we will be finding the asc file and copying it to the new folder
 
+    Input
+
+    Output
+
+    Assumptions
+    '''
+    for line in range(len(tgc_data)):
+        if tgc_data[line][0] == 'Read Grid Zpts':
+            asc_file= tgc_data[line][1]
+
+    asc_file_path_TF = pathlib.Path(asc_file).absolute()
+    shutil.copy(asc_file_path_TF, FM_folder_path)
+
+    xml2d.domains[domain_name]
+        
+
+    return xml2d
