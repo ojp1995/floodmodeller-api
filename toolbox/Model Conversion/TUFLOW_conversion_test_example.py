@@ -20,6 +20,7 @@ sys.path.append(r"C:\Users\phillio\Github\Open_source\floodmodeller-api")
 #load in the test TUFLOW data
 
 tgc_filepath = pathlib.Path('C:/Users/phillio/OneDrive - Jacobs/Documents/TUFLOW_examples/Bootle/Bootle/TUFLOW/Model/BOOT_023.tgc')
+tgc_folder_path = tgc_filepath.parent
 # give direction to FM folder where new data will be stored.
 FM_folder_path = pathlib.Path(r"C:\Users\phillio\OneDrive - Jacobs\Documents\TUFLOW_examples\Bootle_FM\Bootle_2D_data")
 FM_folder_name = FM_folder_path.name
@@ -34,6 +35,14 @@ xll, yll, dx, nrows, ncols, active_area_path_FM, rotation = find_active_area_fro
 
 xml2d = load_active_area_to_xml( xml2d, xll, yll, dx, nrows, ncols, active_area_path_FM, rotation, FM_folder_name, domain_name)
 
-# xml2d = find_and_load_asc_to_xml(xml2d, TUFLOW_data, tgc_filepath, FM_folder_path)
+xml2d = find_and_load_asc_to_xml(xml2d, TUFLOW_data, tgc_folder_path, FM_folder_path, domain_name)
+
+save_name = 'Bootle_test_API_only.xml'
+xml2d.save(pathlib.Path(FM_folder_path/save_name))
+# change the time given
+
+# run
+
+# re-run starting with blank xml file
 
 
