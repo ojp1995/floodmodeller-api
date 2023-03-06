@@ -37,12 +37,20 @@ xml2d = load_active_area_to_xml( xml2d, xll, yll, dx, nrows, ncols, active_area_
 
 xml2d = find_and_load_asc_to_xml(xml2d, TUFLOW_data, tgc_folder_path, FM_folder_path, domain_name)
 
-save_name = 'Bootle_test_API_only.xml'
-xml2d.save(pathlib.Path(FM_folder_path/save_name))
+
 # change the time given
+xml2d.domains["Domain 1"]["time"]["total"] = 1.00
+
+xml2d._write()
+
+save_name = 'Bootle_test_API_only.xml'
+xml2d.save(pathlib.Path(FM_folder_path.parent, save_name))
+
+
+
 
 # run
-
+xml2d.simulate()
 # re-run starting with blank xml file
 
 
