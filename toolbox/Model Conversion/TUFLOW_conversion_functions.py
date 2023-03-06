@@ -249,10 +249,8 @@ def load_active_area_to_xml(xml2d, xll, yll, dx, nrows, ncols, active_area_path,
     xml2d.domains[domain_name]["computational_area"]["dx"] = dx
     xml2d.domains[domain_name]["computational_area"]["nrows"] = nrows
     xml2d.domains[domain_name]["computational_area"]["ncols"] = ncols
-    xml2d.domains[domain_name]["computational_area"]["active_area"] = active_area_path_FM
+    xml2d.domains[domain_name]["computational_area"]["active_area"] = str(active_area_path_FM)
     xml2d.domains[domain_name]["computational_area"]["rotation"] = rotation
-
-    xml2d.domains[domain_name]["topography"] = "holding.asc"
 
     # TODO: This is the part that is broken, it doens't like saving to this file apparently.
     # xml2d.update()  # this should check that everything has been added and order it correctly.
@@ -260,7 +258,6 @@ def load_active_area_to_xml(xml2d, xll, yll, dx, nrows, ncols, active_area_path,
     # xml2d._recursive_reorder_xml()
     # xml2d._write()
     # xml2d._validate()
-    xml2d.save(r"C:\Users\phillio\OneDrive - Jacobs\Documents\TUFLOW_examples\Bootle_FM\Bootle_test.xml")
     return xml2d
 
 def find_and_load_asc_to_xml(xml2d, tgc_data, tgc_folder_path, FM_folder_path, domain_name):
@@ -279,9 +276,9 @@ def find_and_load_asc_to_xml(xml2d, tgc_data, tgc_folder_path, FM_folder_path, d
 
     asc_file_path_TF = pathlib.Path(tgc_folder_path, asc_file)
     shutil.copy(asc_file_path_TF, FM_folder_path)
-    asc_file_path_FM = pathlib.Path(FM_folder_path, pathlib.Path(asc_file).name)
+    asc_file_path_FM = pathlib.Path(FM_folder_path.parts[-1], pathlib.Path(asc_file).name)
 
-    xml2d.domains[domain_name]["topography"] = asc_file_path_FM
+    xml2d.domains[domain_name]["topography"] = str(asc_file_path_FM)
         
 
     return xml2d
