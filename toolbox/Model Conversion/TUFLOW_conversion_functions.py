@@ -263,7 +263,7 @@ def load_active_area_to_xml(xml2d, xll, yll, dx, nrows, ncols, active_area_path,
     xml2d.save(r"C:\Users\phillio\OneDrive - Jacobs\Documents\TUFLOW_examples\Bootle_FM\Bootle_test.xml")
     return xml2d
 
-def find_and_load_asc_to_xml(xml2d, tgc_data, tgc_filepath, FM_folder_path, domain_name):
+def find_and_load_asc_to_xml(xml2d, tgc_data, tgc_folder_path, FM_folder_path, domain_name):
     '''
     In this function we will be finding the asc file and copying it to the new folder
 
@@ -277,10 +277,11 @@ def find_and_load_asc_to_xml(xml2d, tgc_data, tgc_filepath, FM_folder_path, doma
         if tgc_data[line][0] == 'Read Grid Zpts':
             asc_file= tgc_data[line][1]
 
-    asc_file_path_TF = pathlib.Path(asc_file).absolute()
+    asc_file_path_TF = pathlib.Path(tgc_folder_path, asc_file)
     shutil.copy(asc_file_path_TF, FM_folder_path)
+    asc_file_path_FM = pathlib.Path(FM_folder_path, pathlib.Path(asc_file).name)
 
-    xml2d.domains[domain_name]
+    xml2d.domains[domain_name]["topography"] = asc_file_path_FM
         
 
     return xml2d
