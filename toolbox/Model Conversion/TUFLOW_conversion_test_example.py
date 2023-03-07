@@ -27,8 +27,8 @@ FM_folder_name = FM_folder_path.name
 domain_name = "Domain 1"
 
 # loading empty(ish) xml2d file
-empty_xml = r"C:\Users\phillio\OneDrive - Jacobs\Documents\TUFLOW_examples\Bootle_FM\xml2d_bootle_test.xml"
-xml2d = XML2D(empty_xml)
+# empty_xml = r"C:\Users\phillio\OneDrive - Jacobs\Documents\TUFLOW_examples\Bootle_FM\xml2d_bootle_test.xml"
+xml2d = XML2D()
 
 TUFLOW_data = convert_tgc_to_list(tgc_filepath)
 xll, yll, dx, nrows, ncols, active_area_path_FM, rotation = find_active_area_from_tgc_file(TUFLOW_data, tgc_filepath, FM_folder_path)
