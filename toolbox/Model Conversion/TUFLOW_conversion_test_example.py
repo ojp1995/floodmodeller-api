@@ -30,6 +30,15 @@ domain_name = "Domain 1"
 # empty_xml = r"C:\Users\phillio\OneDrive - Jacobs\Documents\TUFLOW_examples\Bootle_FM\xml2d_bootle_test.xml"
 xml2d = XML2D()
 
+xml2d.domains[domain_name]["computational_area"] = {
+    'xll': ...,
+    'yll': ...,
+    'dx' : ...,
+    'nrows' : ...,
+    'ncols' : ...,
+    'active_area': ...,
+    'rotation': ...,
+}
 TUFLOW_data = convert_tgc_to_list(tgc_filepath)
 xll, yll, dx, nrows, ncols, active_area_path_FM, rotation = find_active_area_from_tgc_file(TUFLOW_data, tgc_filepath, FM_folder_path)
 
@@ -37,6 +46,7 @@ xml2d = load_active_area_to_xml( xml2d, xll, yll, dx, nrows, ncols, active_area_
 
 xml2d = find_and_load_asc_to_xml(xml2d, TUFLOW_data, tgc_folder_path, FM_folder_path, domain_name)
 
+xml2d = find_and_copy_roughness_to_FM_repo(xml2d, TUFLOW_data, tgc_folder_path, FM_folder_path, domain_name)
 
 # change the time given
 xml2d.domains["Domain 1"]["time"]["total"] = 1.00
