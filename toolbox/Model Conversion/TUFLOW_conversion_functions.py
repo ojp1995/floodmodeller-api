@@ -344,3 +344,43 @@ def find_and_copy_roughness_to_FM_repo(xml, tgc_data, tgc_folder_path, FM_folder
 
     return xml
     
+def load_roughness_to_xml(xml, tgc_data, FM_folder_path, domain_name):
+    '''
+    In this function we will be loading the roughness parameters to the xml
+
+    Inputs
+
+    Outputs:
+        xml - the updated xml
+
+    Assumptions:
+
+    '''
+
+    # Need to construct an empty dictionary and then apped onto it. Or create the correct sized dictionary and then
+    # poppulate it. 
+    # Aim is to have something of the form:
+    xml.domains[domain_name]["roughness"] = [
+        {'type': ..., 'law': ..., 'value': ..., },
+        {'type': ..., 'law': ..., 'value': ..., },
+        ...
+    ]
+    # question is do you use a looping method of a dictionary comprehesion method, both can work, think about what is
+    # cleaner/ works best for you and probably what is more easily adaptable in the future. Not chaning the law at the
+    # the minute but could be at a later point.
+
+
+    # j = 0 # counter incase there are multiple roughness surfaces
+    # for line in range(len(tgc_data)):
+    #     if tgc_data[line][0] == 'Read GIS Mat':
+    #         if j ==0: # no other roughness parameters, so replacing
+    #             xml.domains[domain_name]["roughness"]["type"] = 'file'
+    #             xml.domains[domain_name]["roughness"]["law"] = 'manning'
+    #             xml.domains[domain_name]["roughness"]["value"] = str(pathlib.Path(FM_folder_path.parts[-1], pathlib.Path(tgc_data[line][1]).name))
+    #             j +=1
+    #         else:
+    #             xml.domains[domain_name]["roughness"]["file"]  = [xml.domains[domain_name]["roughness"]["file"] ] 
+    #             xml.domains[domain_name]["roughness"]["file"] .append(str(pathlib.Path(FM_folder_path.parts[-1], pathlib.Path(tgc_data[line][1]).name)))
+    #             j+=1
+
+    return xml
