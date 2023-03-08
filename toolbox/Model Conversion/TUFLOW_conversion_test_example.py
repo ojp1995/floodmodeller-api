@@ -39,6 +39,13 @@ xml2d.domains[domain_name]["computational_area"] = {
     'active_area': ...,
     'rotation': ...,
 }
+
+# Think this can be removed as it is being initiated inside the function, need to check.
+xml2d.domains[domain_name]["roughness"] = {
+    'type': ...,
+    'law': ...,
+    'value': ...,
+}
 TUFLOW_data = convert_tgc_to_list(tgc_filepath)
 xll, yll, dx, nrows, ncols, active_area_path_FM, rotation = find_active_area_from_tgc_file(TUFLOW_data, tgc_filepath, FM_folder_path)
 
@@ -48,6 +55,7 @@ xml2d = find_and_load_asc_to_xml(xml2d, TUFLOW_data, tgc_folder_path, FM_folder_
 
 xml2d = find_and_copy_roughness_to_FM_repo(xml2d, TUFLOW_data, tgc_folder_path, FM_folder_path, domain_name)
 
+xml2d = load_roughness_to_xml(xml2d, TUFLOW_data, FM_folder_path, domain_name)
 # change the time given
 xml2d.domains["Domain 1"]["time"]["total"] = 1.00
 
