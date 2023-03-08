@@ -63,6 +63,43 @@ def convert_tgc_to_list(tgc_filepath):
 
             tgc_data.append((prop, value))
 
+    # final step to remove any slightly odd parts
+    tgc_data = clean_space_from_tgc(tgc_data)
+
+    return tgc_data
+
+def clean_space_from_tgc(tgc_data):
+    '''
+    In this function we will be attempting to clean the data so everything is either an integer or a string.
+    
+    Inputs
+    
+    Outputs
+    
+    Assumptions:
+        1. Partitionaing around | 
+        2. That on at least one side of the | there is something useful we want
+        3. There is only one | per line.
+        '''
+
+    # We are wanting to see if there are any spaces in the values and remove those as they should be either numbers
+    # or strings.
+    #
+    # HOWEVER, we want to leave the 'GRID SIZE (X,Y)' as is as we deal with that separately
+
+    for line in range(len(tgc_data)):
+        if '|' in tgc_data[line][1]:  # partitioning around |, sometimes I don't think we want the info
+            tgc_line_partition = tgc_data[line][1].partition('|')
+            
+            # check that left of | contains a .shp file
+            if '.shp' in tgc_line_partition[0]:
+                tgc_data[line] = (tgc_data[line][0], tgc_line_partition[0].strip())
+            else:
+                tgc_data.remove(tgc_data[line])
+
+            if '.shp' in tgc_line_partition[2]:
+                tgc_data.append( (tgc_data[line][0], tgc_line_partition[2].strip()) )
+
     return tgc_data
 
 
@@ -282,3 +319,28 @@ def find_and_load_asc_to_xml(xml2d, tgc_data, tgc_folder_path, FM_folder_path, d
         
 
     return xml2d
+
+def find_and_copy_roughness_to_FM_repo(xml, tgc_data, tgc_folder_path, FM_folder_path, domain_name):
+    '''
+    In this function we will be looking at the data and then finding the roughness with the 
+    property 'Read GIS Mat'
+
+    Assumption: Data is clean!
+    '''
+    roughness = []
+    for line in range(len(tgc_data)):
+        if tgc_data[line][0] == 'Read GIS Mat':
+            roughness.append(tgc_data[line][1])
+
+    # now we want to open and then copy the shape file(s) across
+    for j in range(len(roughness)):
+        # path to file
+        roughness_path_TF = pathlib.Path(tgc_folder_path, roughness[j])
+        # open the file
+        df_roughness = gpd.read_file(roughness_path_TF)
+        # move file to FM folder
+        df_roughness.to_file(pathlib.Path(FM_folder_path, roughness_path_TF.name))
+    
+
+    return xml
+    
