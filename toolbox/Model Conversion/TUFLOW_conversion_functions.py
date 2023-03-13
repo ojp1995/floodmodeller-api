@@ -350,7 +350,13 @@ def find_and_copy_roughness_to_FM_repo(xml, tgc_data, tgc_folder_path, FM_folder
         df_roughness = gpd.read_file(roughness_path_TF)
         # attaching the roughness manning values to specific material code IDs
         # TODO: Figure out way to read correct column name, different for different shp files.
-        df_complete = df_roughness.merge(df_tmf, how='inner', left_on = 'featurecod', right_on = 'Type/ID')
+        # finding which column contains the associated material codes
+        S1 = set(df_tmf['Type/ID'])
+        for col in df_roughness.columns:
+            S2 = set(df_roughness[col])
+
+            if len(S1.intersection(S2)) != 0:
+                df_complete = df_roughness.merge(df_tmf, how='inner', left_on = col, right_on = 'Type/ID')
 
         # move file to FM folder
         df_complete.to_file(pathlib.Path(FM_folder_path, roughness_path_TF.name))
