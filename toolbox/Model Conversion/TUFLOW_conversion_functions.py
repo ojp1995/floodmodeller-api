@@ -12,18 +12,16 @@ import shutil  # for copying files to new file paths
 import math
 import pandas as pd
 
-sys.path.append(r"C:\Users\phillio\Github\Open_source\floodmodeller-api")
-
 def convert_tgc_to_list(tgc_filepath):
     '''
     In this function we will be reading in the tgc file from the specific given filepath
     and will give the output as a list of tuples, of the property and the value.
 
     # Input arguments:
-        tgc_filepath - the path to the file
+        tgc_filepath - path to tgc file. Type - Path
     
     # Output arguments
-        tgc_data - list of tuples of the outputs
+        tgc_data - List of tuples from tgc file, tuples as (properties, values). Type - List of Tuples
     
     # Assumptions:
         1. Tabbed spaces are interpreted as type "\t"
@@ -74,8 +72,10 @@ def clean_space_from_tgc(tgc_data):
     In this function we will be attempting to clean the data so everything is either an integer or a string.
     
     Inputs
+        tgc_data - List of tuples from tgc file, tuples as (properties, values). Type - List of Tuples
     
     Outputs
+        tgc_data - This will be cleaned to split any entries that are partitioned are given their own value. Type - List of Tuples
     
     Assumptions:
         1. Partitionaing around | 
@@ -110,20 +110,23 @@ def find_active_area_from_tgc_file(tgc_data, tgc_filepath, FM_folder_path):
     the computational area for Flood Modeller
 
     Inputs:
-        tgc_data - list of data
-        tgc_filepath - path to tgc data
+        ttgc_data - List of tuples from tgc file, tuples as (properties, values). Type - List of Tuples
+        tgc_filepath - path to tgc data. Type - Path
+        FM_folder_path - path to Flood Modeller folder where we want the data saved to. Type - Path
+        
 
     Outputs 
-        xll
-        yll
-        dx - spacial step
-        nrows
-        ncols
-        active_area
-        rotation
+        xll - lower left x-coordinate of the computational area. Type - Float
+        yll - lower left y-coordinate of the computational area. Type - Float
+        dx - spacial step - Type - Float
+        nrows - number of rows in the computational area. Type - Integer
+        ncols - number of colums in the computational area. Type - Integer
+        active_area - path to active area file in FM folder. Type - Path
+        rotation - angle rotational area is rotated in anti-clockwise direction from the horizontal
+            between 0 and 360 degrees. Type - Float
 
     Assumptions:
-        1.
+        1. rotation is output in degrees. Angle is measured from horizontal anti-clockwise
     '''
         # now we need to find the nrows, ncols, and active area path
     for line in range(len(tgc_data)):
@@ -196,11 +199,11 @@ def find_orientation_line_angle(x1, y1, x2, y2):
     will range from 0 to 360 degrees.
 
     Input:
-        (x1, y1) start point of the orientation line
-        (x2, y2) end point of the orientation line
+        (x1, y1) start point of the orientation line. Type Float
+        (x2, y2) end point of the orientation line. Type Float
 
     Output:
-        Theta - angle between the horizontal and the orientation line in anti-clockwise line
+        Theta - angle between the horizontal and the orientation line in anti-clockwise line. Type Float
 
     Assumptions:
         1. angle is measured anti clockwise from horizontal, centre of rotation (x1, y1).
@@ -256,16 +259,18 @@ def load_active_area_to_xml(xml2d, xll, yll, dx, nrows, ncols, active_area_path,
     Flood Modeller xml2d solver
 
     Inputs:
-        xml2d - xml file without the computational area information
-        (xll, yll) - lower left coordinates
-        nrows, ncols - number of grid points for discretisation of active area
-        active area_path - path to a .shp file to be loaded directly into xml file
-        rotation - angle rotated of grid from horizontal at xll, yll anti-clockwise
-        FM_folder_path - path where the new information is saved, xml should be in folder above this
-        domain_name - the domain we are wanting to add here
+        xll - lower left x-coordinate of the computational area. Type - Float
+        yll - lower left y-coordinate of the computational area. Type - Float
+        dx - spacial step - Type - Float
+        nrows - number of rows in the computational area. Type - Integer
+        ncols - number of colums in the computational area. Type - Integer
+        active_area - path to active area file in FM folder. Type - Path
+        rotation - angle rotational area is rotated in anti-clockwise direction from the horizontal
+                    between 0 and 360 degrees. Type - Float
+        domain_name - the domain we are wanting to add here. Type String
 
     Outputs:
-        xml2d - updated with computational area
+        xml2d - updated with computational area. Type xml file
 
     Assumptions:
         1. Empty (ish) xml2d file as input, or rather no computational area 
@@ -276,9 +281,7 @@ def load_active_area_to_xml(xml2d, xll, yll, dx, nrows, ncols, active_area_path,
 
         4. active_area_path is an absolute path.
     '''
-
-    # rel_parent_path = pathlib.Path(active_area_path).parents[0]
-
+    # TODO: Maybe change to relative path?
     active_area_file = pathlib.Path(active_area_path).name
     active_area_path_FM = pathlib.Path(FM_folder_name, active_area_file)
 
@@ -290,12 +293,6 @@ def load_active_area_to_xml(xml2d, xll, yll, dx, nrows, ncols, active_area_path,
     xml2d.domains[domain_name]["computational_area"]["active_area"] = str(active_area_path_FM)
     xml2d.domains[domain_name]["computational_area"]["rotation"] = rotation
 
-    # TODO: This is the part that is broken, it doens't like saving to this file apparently.
-    # xml2d.update()  # this should check that everything has been added and order it correctly.
-    # xml2d.save()
-    # xml2d._recursive_reorder_xml()
-    # xml2d._write()
-    # xml2d._validate()
     return xml2d
 
 def find_and_load_asc_to_xml(xml2d, tgc_data, tgc_folder_path, FM_folder_path, domain_name):
@@ -303,8 +300,14 @@ def find_and_load_asc_to_xml(xml2d, tgc_data, tgc_folder_path, FM_folder_path, d
     In this function we will be finding the asc file and copying it to the new folder
 
     Input
+        xml2d - xml2d file without/with old asc file path. Type xml file
+        tgc_data - List of tuples from tgc file, tuples as (properties, values). Type - List of Tuples
+        tgc_filepath - path to tgc file. Type - Path
+        FM_folder_path - path to Flood Modeller folder where we want the data saved to. Type - Path
+        domain_name - the domain we are wanting to add here. Type String
 
     Output
+        xml2d - with path to new asc file. Type xml file.
 
     Assumptions
     '''
@@ -317,25 +320,27 @@ def find_and_load_asc_to_xml(xml2d, tgc_data, tgc_folder_path, FM_folder_path, d
     asc_file_path_FM = pathlib.Path(FM_folder_path.parts[-1], pathlib.Path(asc_file).name)
 
     xml2d.domains[domain_name]["topography"] = str(asc_file_path_FM)
-        
 
     return xml2d
 
-def find_and_copy_roughness_to_FM_repo(xml, tgc_data, tgc_folder_path, FM_folder_path, domain_name, df_tmf):
+def find_and_copy_roughness_to_FM_repo(xml2d, tgc_data, tgc_folder_path, FM_folder_path, df_tmf):
     '''
     In this function we will be looking at the data and then finding the roughness with the 
     property 'Read GIS Mat'. It will also load the associated roughness values to a new column
     of the shape files before being exported.
 
     Inputs
-
+        tgc_data - List of tuples from tgc file, tuples as (properties, values). Type - List of Tuples
+        tgc_filepath - path to tgc file. Type - Path
+        FM_folder_path - path to Flood Modeller folder where we want the data saved to. Type - Path
         df_tmf - data frame with the roughness values with associated material code IDs
 
     Outputs:
+        xml2d - no changes made to file.
 
     Assumption: 
         1. Data is clean
-        2. 'featurecod' is the 
+        2. The material code/ ID matches between thedf_tmf and the roughness ID values given.
     '''
     roughness = []
     for line in range(len(tgc_data)):
@@ -349,7 +354,6 @@ def find_and_copy_roughness_to_FM_repo(xml, tgc_data, tgc_folder_path, FM_folder
         # open the file
         df_roughness = gpd.read_file(roughness_path_TF)
         # attaching the roughness manning values to specific material code IDs
-        # TODO: Figure out way to read correct column name, different for different shp files.
         # finding which column contains the associated material codes
         S1 = set(df_tmf['Type/ID'])
         for col in df_roughness.columns:
@@ -361,8 +365,7 @@ def find_and_copy_roughness_to_FM_repo(xml, tgc_data, tgc_folder_path, FM_folder
         # move file to FM folder
         df_complete.to_file(pathlib.Path(FM_folder_path, roughness_path_TF.name))
 
-    
-    return xml
+    return xml2d
 
 def find_mannings_val_from_tmf(tmf_file):
     '''
@@ -370,8 +373,11 @@ def find_mannings_val_from_tmf(tmf_file):
     two columns, one with the material code, one with the associated mannings value for roughness.
 
     Inputs
+        tmf_file -  File with material codes and corresponding roughness.
 
     Outputs
+        df_tmf - data frame with the roughness values with associated material code IDs.
+
 
     Assumptions:
     '''
@@ -417,19 +423,19 @@ def find_mannings_val_from_tmf(tmf_file):
 
     return df_tmf
     
-def load_roughness_to_xml(xml, tgc_data, FM_folder_path, domain_name):
+def load_roughness_to_xml(xml2d, tgc_data, FM_folder_path, domain_name):
     '''
     In this function we will be loading the roughness parameters to the xml. 
 
     Inputs
-        xml
-        tgc_data
-        FM_folder_path
-        domain_name
+        xml2d - xml2d file without/with old asc file path. Type xml file
+        tgc_data - List of tuples from tgc file, tuples as (properties, values). Type - List of Tuples
+        FM_folder_path - path to Flood Modeller folder where we want the data saved to. Type - Path
+        domain_name - the domain we are wanting to add here. Type String
         
 
     Outputs:
-        xml - the updated xml
+        xml2d - the updated xml with paths to roughness files.
 
     Assumptions:
         1. A blank domain is inserted with only one entry, multiple entries would need a different routine
@@ -444,14 +450,14 @@ def load_roughness_to_xml(xml, tgc_data, FM_folder_path, domain_name):
         if tgc_data[line][0] == 'Read GIS Mat':
             roughness_value.append( str(pathlib.Path(FM_folder_path.parts[-1], pathlib.Path(tgc_data[line][1]).name)) )
 
-    xml.domains[domain_name]["roughness"] = []  # creating blank
+    xml2d.domains[domain_name]["roughness"] = []  # creating blank
 
     for j in range(len(roughness_value)):
-        xml.domains[domain_name]["roughness"].append(
+        xml2d.domains[domain_name]["roughness"].append(
             {"type": "file", "law": "manning", "value": roughness_value[j]}
         )
 
 
 
 
-    return xml
+    return xml2d
