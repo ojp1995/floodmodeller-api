@@ -10,6 +10,7 @@ import pyproj, fiona
 import copy
 import shutil  # for copying files to new file paths
 import math
+import pandas as pd
 
 sys.path.append(r"C:\Users\phillio\Github\Open_source\floodmodeller-api")
 
@@ -320,12 +321,21 @@ def find_and_load_asc_to_xml(xml2d, tgc_data, tgc_folder_path, FM_folder_path, d
 
     return xml2d
 
-def find_and_copy_roughness_to_FM_repo(xml, tgc_data, tgc_folder_path, FM_folder_path, domain_name):
+def find_and_copy_roughness_to_FM_repo(xml, tgc_data, tgc_folder_path, FM_folder_path, domain_name, df_tmf):
     '''
     In this function we will be looking at the data and then finding the roughness with the 
-    property 'Read GIS Mat'
+    property 'Read GIS Mat'. It will also load the associated roughness values to a new column
+    of the shape files before being exported.
 
-    Assumption: Data is clean!
+    Inputs
+
+        df_tmf - data frame with the roughness values with associated material code IDs
+
+    Outputs:
+
+    Assumption: 
+        1. Data is clean
+        2. 'featurecod' is the 
     '''
     roughness = []
     for line in range(len(tgc_data)):
@@ -338,49 +348,104 @@ def find_and_copy_roughness_to_FM_repo(xml, tgc_data, tgc_folder_path, FM_folder
         roughness_path_TF = pathlib.Path(tgc_folder_path, roughness[j])
         # open the file
         df_roughness = gpd.read_file(roughness_path_TF)
-        # move file to FM folder
-        df_roughness.to_file(pathlib.Path(FM_folder_path, roughness_path_TF.name))
-    
+        # attaching the roughness manning values to specific material code IDs
+        # TODO: Figure out way to read correct column name, different for different shp files.
+        df_complete = df_roughness.merge(df_tmf, how='inner', left_on = 'featurecod', right_on = 'Type/ID')
 
+        # move file to FM folder
+        df_complete.to_file(pathlib.Path(FM_folder_path, roughness_path_TF.name))
+
+    
     return xml
+
+def find_mannings_val_from_tmf(tmf_file):
+    '''
+    We will be reading the tmf file, cleaning it and exporting it as a data frame. There will be (hopefully)
+    two columns, one with the material code, one with the associated mannings value for roughness.
+
+    Inputs
+
+    Outputs
+
+    Assumptions:
+    '''
+
+    with open(tmf_file, "r") as tmffile:
+        raw_data = [line.rstrip("\n") for line in tmffile.readlines()]
+
+         # cleaning the data to remove commented lines (starts with "!"" or "! ") or empty lines:
+    raw_data_copy = copy.deepcopy(raw_data)
+    for line in raw_data_copy:
+        if line.lstrip().startswith("!"):
+            raw_data.remove(line)
+
+    raw_data_copy = copy.deepcopy(raw_data)
+    for line in raw_data_copy:
+        if line.lstrip().startswith("! "):
+            raw_data.remove(line)
+
+    raw_data_copy = copy.deepcopy(raw_data)
+    for line in raw_data_copy:
+        if len(line.strip()) == 0:
+            raw_data.remove(line)   
+
+    # removing any tabbed spaces
+    raw_data = [item.replace('\t', '') for item in raw_data]
+
+    for line in range(len(raw_data)):
+        line_partition = raw_data[line].partition('!')
+        raw_data[line] = line_partition[0] # only taking information from the left habd side if the '!'
+
+    # now splitting around the comma so we have ID code and corresponding value
+    tmf_data = []
+    for line in raw_data:
+        if ',' in line:
+            data_partition = line.partition(',')
+            material_code = data_partition[0].strip()
+            value = data_partition[2].strip()
+
+            tmf_data.append((int(material_code), float(value)))
+
+    # now we want to export this as a data frame for easy handling
+    df_tmf = pd.DataFrame(tmf_data, columns = ['Type/ID', 'value'])
+
+    return df_tmf
     
 def load_roughness_to_xml(xml, tgc_data, FM_folder_path, domain_name):
     '''
-    In this function we will be loading the roughness parameters to the xml
+    In this function we will be loading the roughness parameters to the xml. 
 
     Inputs
+        xml
+        tgc_data
+        FM_folder_path
+        domain_name
+        
 
     Outputs:
         xml - the updated xml
 
     Assumptions:
+        1. A blank domain is inserted with only one entry, multiple entries would need a different routine
+        2. Currently only type is set to file and law to manning, need to find a way to adapt that.
 
     '''
 
-    # Need to construct an empty dictionary and then apped onto it. Or create the correct sized dictionary and then
-    # poppulate it. 
-    # Aim is to have something of the form:
-    xml.domains[domain_name]["roughness"] = [
-        {'type': ..., 'law': ..., 'value': ..., },
-        {'type': ..., 'law': ..., 'value': ..., },
-        ...
-    ]
-    # question is do you use a looping method of a dictionary comprehesion method, both can work, think about what is
-    # cleaner/ works best for you and probably what is more easily adaptable in the future. Not chaning the law at the
-    # the minute but could be at a later point.
+    #TODO: Add ability to know whether this is going to be a a different type or law!
+    roughness_value = []
+    # finding the roughness values we need to add.
+    for line in range(len(tgc_data)):
+        if tgc_data[line][0] == 'Read GIS Mat':
+            roughness_value.append( str(pathlib.Path(FM_folder_path.parts[-1], pathlib.Path(tgc_data[line][1]).name)) )
+
+    xml.domains[domain_name]["roughness"] = []  # creating blank
+
+    for j in range(len(roughness_value)):
+        xml.domains[domain_name]["roughness"].append(
+            {"type": "file", "law": "manning", "value": roughness_value[j]}
+        )
 
 
-    # j = 0 # counter incase there are multiple roughness surfaces
-    # for line in range(len(tgc_data)):
-    #     if tgc_data[line][0] == 'Read GIS Mat':
-    #         if j ==0: # no other roughness parameters, so replacing
-    #             xml.domains[domain_name]["roughness"]["type"] = 'file'
-    #             xml.domains[domain_name]["roughness"]["law"] = 'manning'
-    #             xml.domains[domain_name]["roughness"]["value"] = str(pathlib.Path(FM_folder_path.parts[-1], pathlib.Path(tgc_data[line][1]).name))
-    #             j +=1
-    #         else:
-    #             xml.domains[domain_name]["roughness"]["file"]  = [xml.domains[domain_name]["roughness"]["file"] ] 
-    #             xml.domains[domain_name]["roughness"]["file"] .append(str(pathlib.Path(FM_folder_path.parts[-1], pathlib.Path(tgc_data[line][1]).name)))
-    #             j+=1
+
 
     return xml
