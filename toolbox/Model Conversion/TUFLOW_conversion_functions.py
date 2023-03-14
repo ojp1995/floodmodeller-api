@@ -62,7 +62,7 @@ def convert_tgc_to_list(tgc_filepath):
 
             tgc_data.append((prop, value))
 
-    # final step to remove any slightly odd parts
+    # final step to remove properties with two values or extra unwanted string
     tgc_data = clean_space_from_tgc(tgc_data)
 
     return tgc_data
@@ -119,8 +119,8 @@ def find_active_area_from_tgc_file(tgc_data, tgc_filepath, FM_folder_path):
         xll - lower left x-coordinate of the computational area. Type - Float
         yll - lower left y-coordinate of the computational area. Type - Float
         dx - spacial step - Type - Float
-        nrows - number of rows in the computational area. Type - Integer
-        ncols - number of colums in the computational area. Type - Integer
+        nrows - number of rows in the computational area, Y direction n_Y/dx. Type - Integer
+        ncols - number of colums in the computational area, X direction n_X/dx. Type - Integer
         active_area - path to active area file in FM folder. Type - Path
         rotation - angle rotational area is rotated in anti-clockwise direction from the horizontal
             between 0 and 360 degrees. Type - Float
@@ -144,12 +144,8 @@ def find_active_area_from_tgc_file(tgc_data, tgc_filepath, FM_folder_path):
         if tgc_data[line][0] == 'Read GIS Location':
             orientation_line_path = tgc_data[line][1]
 
-    
-    # Here we have the relative path and file name of the active area and orientation line. We now want to copy these files
-    # into our new repository. IDEALLY using realtive paths but could potentilly find the parent path and then append the 
-    # extension straight on!
 
-    # finding the path/parent path of the tgc file (not sure of we need parent or regular path yet)
+    # finding the parent path of the tgc file 
     p = pathlib.Path(tgc_filepath)
     parent_path = p.parents[0]
 
@@ -162,15 +158,11 @@ def find_active_area_from_tgc_file(tgc_data, tgc_filepath, FM_folder_path):
     # move the file to the new location
     df_active_area.to_file(pathlib.Path(FM_folder_path, active_area_path_TF.name))
 
-    # # copying files to relevant paths
-    # shutil.copy(active_area_path_TF, FM_folder_path)
-
     active_area_path_FM = pathlib.Path.joinpath(FM_folder_path, active_area_file_name)
 
-    
     # orientation line path construction and using the orientation line to access info for active area
     orientation_line_file = pathlib.Path.joinpath(parent_path, orientation_line_path)  # holding line for the minute
-    # shutil.copy(orientation_line_file, FM_folder_path)  # I don't think is needed 
+    
     orientation_line_file.open('a')
     df_orientation_line = gpd.read_file(orientation_line_file)
 
@@ -281,7 +273,7 @@ def load_active_area_to_xml(xml2d, xll, yll, dx, nrows, ncols, active_area_path,
 
         4. active_area_path is an absolute path.
     '''
-    # TODO: Maybe change to relative path?
+
     active_area_file = pathlib.Path(active_area_path).name
     active_area_path_FM = pathlib.Path(FM_folder_name, active_area_file)
 
@@ -297,7 +289,8 @@ def load_active_area_to_xml(xml2d, xll, yll, dx, nrows, ncols, active_area_path,
 
 def find_and_load_asc_to_xml(xml2d, tgc_data, tgc_folder_path, FM_folder_path, domain_name):
     '''
-    In this function we will be finding the asc file and copying it to the new folder
+    In this function we will be finding the asc file and copying it to the new folder. Looking for property 
+    "Read Grid Zpts"
 
     Input
         xml2d - xml2d file without/with old asc file path. Type xml file
@@ -315,11 +308,11 @@ def find_and_load_asc_to_xml(xml2d, tgc_data, tgc_folder_path, FM_folder_path, d
         if tgc_data[line][0] == 'Read Grid Zpts':
             asc_file= tgc_data[line][1]
 
-    asc_file_path_TF = pathlib.Path(tgc_folder_path, asc_file)
-    shutil.copy(asc_file_path_TF, FM_folder_path)
-    asc_file_path_FM = pathlib.Path(FM_folder_path.parts[-1], pathlib.Path(asc_file).name)
+    asc_file_path_TF = pathlib.Path(tgc_folder_path, asc_file) # isolating TUFLOW path
+    shutil.copy(asc_file_path_TF, FM_folder_path)  # copying the file across
+    asc_file_path_FM = pathlib.Path(FM_folder_path.parts[-1], pathlib.Path(asc_file).name)  # file path for FM repo
 
-    xml2d.domains[domain_name]["topography"] = str(asc_file_path_FM)
+    xml2d.domains[domain_name]["topography"] = str(asc_file_path_FM)  # adding asc to xml file
 
     return xml2d
 
@@ -336,14 +329,14 @@ def find_and_copy_roughness_to_FM_repo(xml2d, tgc_data, tgc_folder_path, FM_fold
         df_tmf - data frame with the roughness values with associated material code IDs
 
     Outputs:
-        xml2d - no changes made to file.
+        df_complete - This is the data frame of the roughness
 
     Assumption: 
         1. Data is clean
-        2. The material code/ ID matches between thedf_tmf and the roughness ID values given.
+        2. The material code/ ID matches between the df_tmf and the roughness ID values given.
     '''
     roughness = []
-    for line in range(len(tgc_data)):
+    for line in range(len(tgc_data)):  # looping through to find all relevant roughness shp files
         if tgc_data[line][0] == 'Read GIS Mat':
             roughness.append(tgc_data[line][1])
 
@@ -355,11 +348,12 @@ def find_and_copy_roughness_to_FM_repo(xml2d, tgc_data, tgc_folder_path, FM_fold
         df_roughness = gpd.read_file(roughness_path_TF)
         # attaching the roughness manning values to specific material code IDs
         # finding which column contains the associated material codes
-        S1 = set(df_tmf['Type/ID'])
+        S1 = set(df_tmf['Type/ID'])  # set of ID's we are using as the reference        
         for col in df_roughness.columns:
-            S2 = set(df_roughness[col])
+            S2 = set(df_roughness[col])  # set of each columns values
 
-            if len(S1.intersection(S2)) != 0:
+            if len(S1.intersection(S2)) != 0:  # checking to see that the intersection of sets is not empty
+                # merging the two data frames so they have the corresponding values
                 df_complete = df_roughness.merge(df_tmf, how='inner', left_on = col, right_on = 'Type/ID')
 
         # move file to FM folder
@@ -385,7 +379,7 @@ def find_mannings_val_from_tmf(tmf_file):
     with open(tmf_file, "r") as tmffile:
         raw_data = [line.rstrip("\n") for line in tmffile.readlines()]
 
-         # cleaning the data to remove commented lines (starts with "!"" or "! ") or empty lines:
+    # cleaning the data to remove commented lines (starts with "!"" or "! ") or empty lines:
     raw_data_copy = copy.deepcopy(raw_data)
     for line in raw_data_copy:
         if line.lstrip().startswith("!"):
@@ -404,6 +398,7 @@ def find_mannings_val_from_tmf(tmf_file):
     # removing any tabbed spaces
     raw_data = [item.replace('\t', '') for item in raw_data]
 
+    # removing comments on RHS of useful data
     for line in range(len(raw_data)):
         line_partition = raw_data[line].partition('!')
         raw_data[line] = line_partition[0] # only taking information from the left habd side if the '!'
@@ -443,7 +438,7 @@ def load_roughness_to_xml(xml2d, tgc_data, FM_folder_path, domain_name):
 
     '''
 
-    #TODO: Add ability to know whether this is going to be a a different type or law!
+    #TODO: Add ability to know whether this is going to be a a different type or law.
     roughness_value = []
     # finding the roughness values we need to add.
     for line in range(len(tgc_data)):
