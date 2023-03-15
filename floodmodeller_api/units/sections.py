@@ -1,6 +1,6 @@
 """
 Flood Modeller Python API
-Copyright (C) 2022 Jacobs U.K. Limited
+Copyright (C) 2023 Jacobs U.K. Limited
 
 This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License 
 as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
@@ -57,6 +57,60 @@ class RIVER(Unit):
     """
 
     _unit = "RIVER"
+
+    def _create_from_blank(
+        self,
+        name="new_section",
+        comment="",
+        spill1 ="",
+        spill2 ="",
+        lat1 ="",
+        lat2 ="",
+        lat3 ="",
+        lat4 ="",
+        dist_to_next = 0,
+        slope=0.0001,
+        density=1000.0,
+        data=None
+    ):
+
+        # Initiate new SECTION (currently hardcoding this as default)
+        self._subtype = 'SECTION'
+
+        for param, val in {
+            "name": name,
+            "comment": comment,
+            "spill1": spill1,
+            "spill2": spill2,
+            "lat1": lat1,
+            "lat2": lat2,
+            "lat3": lat3,
+            "lat4": lat4,
+            "dist_to_next": dist_to_next,
+            "slope": slope,
+            "density": density,
+            "data": data
+        }.items():
+            setattr(self, param, val)
+
+        self.data = (
+            data
+            if isinstance(data, pd.DataFrame)
+            else pd.DataFrame(
+                [],
+                columns=[
+                    "X",
+                    "Y",
+                    "Mannings n",
+                    "Panel",
+                    "RPL",
+                    "Marker",
+                    "Easting",
+                    "Northing",
+                    "Deactivation",
+                    "SP. Marker",
+                ],)
+        )
 
     def _read(self, riv_block):
         """Function to read a given RIVER block and store data as class attributes."""
@@ -355,7 +409,7 @@ class REPLICATE(Unit):
 
         params1 = join_10_char(
             self.dist_to_next,
-            f"{self.bed_level_drop:>10.4f}", # allowing 4dp 
+            f"{self.bed_level_drop:>10.4f}",  # allowing 4dp
             self.easting,
             self.northing,
         )
